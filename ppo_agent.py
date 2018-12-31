@@ -66,7 +66,7 @@ class MLPAgent:
                                                     self.old_policy: old_policy_batch})
 
     def get_action(self, state):
-        policy, value = self.sess.run([self.model.actor, self.model.critic], feed_dict={self.model.input: [state]})
+        policy, value = self.sess.run([self.model.actor, self.model.critic], feed_dict={self.model.input: state})
         action = [np.random.choice(self.output_size, p=i) for i in policy]
         policy = [i[j] for i, j in zip(policy, action)]
         return action, policy
