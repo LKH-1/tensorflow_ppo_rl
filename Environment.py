@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import config
 
-def worker(remote, map_name, env_idx, frame_skip, window_size, visualize):
+def worker(remote, map_name, env_idx, frame_skip, window_size, obs_stack, visualize):
     FLAGS = flags.FLAGS
     FLAGS(sys.argv)
     env =  sc2_env.SC2Env(
@@ -24,13 +24,14 @@ def worker(remote, map_name, env_idx, frame_skip, window_size, visualize):
                     disable_fog=False,
                 visualize=visualize)
 
-    history = np.zeros([1, window_size, window_size])
+    history = np.zeros([window_size, window_size, 1])
 
     obs = env.reset()
     obs = env.step(actions=[actions.FunctionCall(config._SELECT_ARMY, [config._SELECT_ALL])])
 
     done = False
     score = 0
+    episode = 0
     while True:
         action = remote.recv()
         if action == 'close':
@@ -46,20 +47,22 @@ def worker(remote, map_name, env_idx, frame_skip, window_size, visualize):
         score += reward
 
         if done:
+            episode += 1
             print('Environment : ', env_idx, '| score : ', score)
             obs = env.reset()
             obs = env.step(actions=[actions.FunctionCall(config._SELECT_ARMY, [config._SELECT_ALL])])
             observation = obs[0].observation.feature_screen.base[5]
             score = 0
 
-        history[:, :, :] = observation
+        history[:, :, :] = observation.reshape([window_size, window_size, obs_stack])
 
-        remote.send([history, reward, done])
+        remote.send([history, reward, done, env_idx])
 
 
 class SubprocVecEnv:
-    def __init__(self, n_proc, map_name, frame_skip, window_size, visualize):
+    def __init__(self, n_proc, map_name, frame_skip, window_size, obs_stack, visualize):
         self.map_name = map_name
+        self.obs_stack = obs_stack
         self.visualize = visualize
         self.n_proc = n_proc
         self.remotes, self.work_remotes = zip(*[Pipe() for _ in range(self.n_proc)])
@@ -69,7 +72,7 @@ class SubprocVecEnv:
         
         for i, (work_remote,) in enumerate(zip(self.work_remotes, )):
             self.ps.append(
-                Process(target=worker, args=(work_remote, self.map_name, i, self.frame_skip, self.window_size, self.visualize))
+                Process(target=worker, args=(work_remote, self.map_name, i, self.frame_skip, self.window_size, self.obs_stack, self.visualize))
             )
         for p in self.ps:
             p.start()
@@ -82,11 +85,14 @@ class SubprocVecEnv:
         states = []
         rewards = []
         dones = []
+        idxs = []
         for remote in self.remotes:
-            s, r, d = remote.recv()
+            s, r, d, idx = remote.recv()
             states.append(s)
             rewards.append(r)
             dones.append(d)
+            idxs.append(idx)
+        #print(idxs)
         return states, rewards, dones
 
 
