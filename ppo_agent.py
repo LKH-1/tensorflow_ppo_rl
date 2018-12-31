@@ -64,15 +64,6 @@ class MLPAgent:
                                                     self.next_value: next_value_batch,
                                                     self.gaes: gaes_batch,
                                                     self.old_policy: old_policy_batch})
-        '''
-        for i in range(self.epoch):
-            self.sess.run(self.train_op, feed_dict={self.model.input: state,
-                                                    self.actions: actions,
-                                                    self.rewards: rewards,
-                                                    self.next_value: next_value,
-                                                    self.gaes: gaes,
-                                                    self.old_policy: old_policy})
-        '''
 
     def get_action(self, state):
         policy, value = self.sess.run([self.model.actor, self.model.critic], feed_dict={self.model.input: [state]})
