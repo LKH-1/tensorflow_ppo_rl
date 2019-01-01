@@ -9,10 +9,8 @@ class MLPActorCritic:
         with tf.variable_scope(name):
             self.input = tf.placeholder(dtype=tf.float32, shape=[None, self.state_size])
             self.dense_1 = tf.layers.dense(inputs=self.input, units=256, activation=tf.nn.relu)
-            self.dense_2 = tf.layers.dense(inputs=self.dense_1, units=256, activation=tf.nn.relu)
-            self.dense_3 = tf.layers.dense(inputs=self.dense_2, units=256, activation=tf.nn.relu)
-            self.actor = tf.layers.dense(inputs=self.dense_3, units=self.output_size, activation=tf.nn.softmax)
-            self.critic = tf.layers.dense(inputs=self.dense_3, units=1, activation=None)
+            self.actor = tf.layers.dense(inputs=self.dense_1, units=self.output_size, activation=tf.nn.softmax)
+            self.critic = tf.layers.dense(inputs=self.dense_1, units=1, activation=None)
     
             self.scope = tf.get_variable_scope().name
 

@@ -25,21 +25,20 @@ class MLPAgent:
         self.old_policy = tf.placeholder(dtype=tf.float32, shape=[None, self.output_size], name='old_policy')
         self.target = tf.placeholder(dtype=tf.float32, shape=[None], name='target')
 
-        act_probs = self.model.actor * tf.one_hot(indices=self.actions, depth=self.output_size)
-        act_probs_ = tf.reduce_sum(act_probs, axis=1)
-        clip_act_probs = tf.clip_by_value(act_probs_, clip_value_min=1e-10, clip_value_max=1.0)
+        self.act_probs = self.model.actor * tf.one_hot(indices=self.actions, depth=self.output_size)
+        self.act_probs_ = tf.reduce_sum(self.act_probs, axis=1)
+        self.clip_act_probs = tf.clip_by_value(self.act_probs_, clip_value_min=1e-10, clip_value_max=1.0)
         
-        act_probs_old = self.old_policy * tf.one_hot(indices=self.actions, depth=self.output_size)
-        act_probs_old_ = tf.reduce_sum(act_probs_old, axis=1)
-        clip_act_probs_old = tf.clip_by_value(act_probs_old_, clip_value_min=1e-10, clip_value_max=1.0)
+        self.act_probs_old = self.old_policy * tf.one_hot(indices=self.actions, depth=self.output_size)
+        self.act_probs_old_ = tf.reduce_sum(self.act_probs_old, axis=1)
+        self.clip_act_probs_old = tf.clip_by_value(self.act_probs_old_, clip_value_min=1e-10, clip_value_max=1.0)
 
-        self.ratio = tf.exp(tf.log(clip_act_probs) - tf.log(clip_act_probs_old))
+        self.ratio = tf.exp(tf.log(self.clip_act_probs) - tf.log(self.clip_act_probs_old))
         self.clip_ratio = tf.clip_by_value(self.ratio, clip_value_min=1 - self.ppo_eps, clip_value_max=1 + self.ppo_eps)
 
         loss_actor_clip = tf.minimum(tf.multiply(self.gaes, self.ratio), tf.multiply(self.gaes, self.clip_ratio))
         loss_actor_clip = tf.reduce_mean(loss_actor_clip)
 
-        #loss_vf = tf.squared_difference(self.rewards + self.gamma * self.next_value, self.model.critic)
         loss_vf = tf.squared_difference(self.target, self.model.critic)
         loss_vf = tf.reduce_mean(loss_vf)
 
@@ -50,6 +49,7 @@ class MLPAgent:
 
     def train_model(self, state, actions, targets, adv):
         old_policy = self.sess.run(self.model.actor, feed_dict={self.model.input: state})
+        
         sample_range = np.arange(len(state))
         for i in range(self.epoch):
             np.random.shuffle(sample_range)
@@ -65,7 +65,7 @@ class MLPAgent:
                                                     self.target: targets_batch,
                                                     self.gaes: adv_batch,
                                                     self.old_policy: old_policy_batch})
-
+        
     def get_action(self, state):
         policy, value = self.sess.run([self.model.actor, self.model.critic], feed_dict={self.model.input: state})
         action = [np.random.choice(self.output_size, p=i) for i in policy]
@@ -82,10 +82,14 @@ class MLPAgent:
         discounted_return = np.empty([num_step])
 
         gae = 0
-        for t in range(num_step - 1):
-            delta = reward[t] + self.gamma * next_value[t] * (1 - done[t]) - value[t]
+        for t in range(num_step - 1, -1, -1):
+            delta = reward[t] + self.gamma * \
+                next_value[t] * (1 - done[t]) - value[t]
             gae = delta + self.gamma * self.lamda * (1 - done[t]) * gae
+
             discounted_return[t] = gae + value[t]
 
+        # For Actor
         adv = discounted_return - value
+
         return adv, discounted_return

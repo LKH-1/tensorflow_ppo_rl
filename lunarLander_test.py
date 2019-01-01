@@ -9,7 +9,6 @@ sess = tf.Session()
 state_size, output_size = 8, 4
 agent = MLPAgent(sess, state_size, output_size)
 sess.run(tf.global_variables_initializer())
-saver = tf.train.Saver()
 num_worker = 8
 num_step = 128
 visualize = False
@@ -27,6 +26,7 @@ while True:
     total_prob = []
     global_update += 1
     for _ in range(num_step):
+
         action, prob = agent.get_action(state)
         next_state, reward, done = sub.step(action)
 
@@ -70,8 +70,6 @@ while True:
     total_prob = np.stack(total_prob).reshape([-1])
 
     agent.train_model(total_state, total_action, total_target, total_adv)
-    
+
     writer.add_scalar('data/total_prob_per_rollout', sum(total_prob)/(num_worker * num_step), global_update)
     writer.add_scalar('data/reward_per_rollout', sum(total_reward)/num_worker, global_update)
-
-    saver.save(sess, 'model/lunarlander')
