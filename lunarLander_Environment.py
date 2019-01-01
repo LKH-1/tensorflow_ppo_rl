@@ -6,30 +6,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def worker(remote, env_idx, visualize):
-    env = gym.make('CartPole-v0')
+    env = gym.make('LunarLander-v2')
     state = env.reset()
     done = False
     step = 0
+    episode = 0
     while True:
         if visualize:
             env.render()
-        step += 1
         action = remote.recv()
         if action == 'close':
             remote.close()
             
         state, reward, done, _ = env.step(action)
-        
-        reward = 0
+        step += reward
 
         if done:
-            if step == 200:
-                reward = 1
-            else:
-                reward = -1
-
-        if done:
-            print('Environment : ', env_idx, '| score : ', step)
+            episode += 1
+            print('Environment : ', env_idx, '| episode :', episode,'| score : ', step)
             state = env.reset()
             step = 0
 
