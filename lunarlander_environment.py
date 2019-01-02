@@ -5,7 +5,7 @@ class Environment(Process):
     def __init__(self, env_idx, child_conn):
         super(Environment, self).__init__()
         self.env = gym.make('LunarLander-v2')
-        self.is_render = False
+        self.is_render = True
         self.env_idx = env_idx
         self.child_conn = child_conn
         self.episode = 0

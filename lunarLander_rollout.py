@@ -10,10 +10,12 @@ sess = tf.Session()
 state_size, output_size = 8, 4
 agent = PPO_MLP(sess, state_size, output_size)
 sess.run(tf.global_variables_initializer())
+saver = tf.train.Saver()
+saver.restore(sess, 'model/lunarlander')
 
 num_worker = 16
 num_step = 128
-visualize = False
+visualize = True
 global_update = 0
 sample_idx = 0
 step = 0
@@ -90,3 +92,4 @@ while True:
     agent.train_model(total_state, total_action, np.hstack(total_target), np.hstack(total_adv))
 
     writer.add_scalar('data/reward_per_rollout', sum(total_reward)/(num_worker), global_update)
+    saver.save(sess, 'model/lunarlander')

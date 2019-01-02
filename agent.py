@@ -11,7 +11,7 @@ class PPO_MLP:
         self.model = MLPActorCritic('network', state_size, output_size)
 
         self.gamma = 0.99
-        self.lamda = 0.99
+        self.lamda = 0.95
         self.lr = 0.0001
         self.batch_size = 32
         self.ppo_eps = 0.2
@@ -87,7 +87,7 @@ class PPO_MLP:
             gaes[t] = gaes[t] + (1-dones[t]) * self.gamma * self.lamda * gaes[t + 1]
         
         target = gaes + values
-        #gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
+        gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
         return gaes, target
 
 if __name__ == '__main__':
