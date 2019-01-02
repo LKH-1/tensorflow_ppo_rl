@@ -13,9 +13,12 @@ class PPO_MLP:
 
         self.gamma = 0.99
         self.lamda = 0.99
-        self.lr = 0.001
+        self.lr = 0.00025
         self.batch_size = 4
         self.ppo_eps = 0.2
+        self.grad_clip_max = 1.0
+        self.grad_clip_min = -1.0
+        self.epoch = 3
 
         self.pi_trainable = self.model.get_trainable_variables()
         self.old_pi_trainable = self.old_model.get_trainable_variables()
@@ -49,14 +52,26 @@ class PPO_MLP:
 
         total_loss = actor_loss + critic_loss
         optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
-        self.train_op = optimizer.minimize(total_loss, var_list=self.pi_trainable)
+        gvs = optimizer.compute_gradients(total_loss, var_list=self.pi_trainable)
+        capped_gvs = [(tf.clip_by_value(grad, self.grad_clip_min, self.grad_clip_max), var) for grad, var in gvs]
+        self.train_op = optimizer.apply_gradients(capped_gvs)
+        #self.train_op = optimizer.minimize(total_loss, var_list=self.pi_trainable)
 
     def train_model(self, state, action, targets, advs):
-        self.sess.run(self.train_op, feed_dict={self.model.input: state,
-                                                self.old_model.input: state,
-                                                self.actions: action,
-                                                self.adv: advs,
-                                                self.targets: targets})
+        sample_range = np.arange(len(state))
+        for ep in range(self.epoch):
+            np.random.shuffle(sample_range)
+            for j in range(int(len(state) / self.batch_size)):
+                sample_idx = sample_range[self.batch_size * j:self.batch_size * (j + 1)]
+                state_batch = [state[i] for i in sample_idx]
+                action_batch = [action[i] for i in sample_idx]
+                advs_batch = [targets[i] for i in sample_idx]
+                targets_batch = [advs[i] for i in sample_idx]
+                self.sess.run(self.train_op, feed_dict={self.model.input: state_batch,
+                                                self.old_model.input: state_batch,
+                                                self.actions: action_batch,
+                                                self.adv: advs_batch,
+                                                self.targets: targets_batch})
 
     def assign_policy_parameters(self):
         return self.sess.run(self.assign_ops)
