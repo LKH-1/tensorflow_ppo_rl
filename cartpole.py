@@ -12,7 +12,7 @@ agent = PPO_MLP(sess, state_size, output_size)
 sess.run(tf.global_variables_initializer())
 
 ep = 0
-rollout = 32
+rollout = 128
 
 while True:
     total_state, total_reward, total_done, total_next_state, total_action = [], [], [], [], []
