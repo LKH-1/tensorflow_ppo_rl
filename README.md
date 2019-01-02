@@ -5,10 +5,6 @@ The framework used in this Repository is Pytorch. The multi-processing method is
 
 ## 1. MoveToBeacon  
 
-* Script : MoveToBeacon_ppo.py  
-* Environment : MoveToBeacon-v2
-* Iteration : 20k episode in 'data/reward'
-
 ###### LunarLander-v2
 <div align="center">
   <img src="sources/lunarlander.gif" width="49%" height='300'>
