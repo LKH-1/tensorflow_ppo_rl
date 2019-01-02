@@ -1,7 +1,7 @@
 # This Repository is Reinforcement Learning related with PPO in StarCraft II
 
 This Repository is Reinforcece Learning Implementation related with PPO.
-The framework used in this Repository is Pytorch. The multi-processing method is basically built in. The agents are trained by PAAC(Parallel Advantage Actor Critic) strategy. All Environments is supported by Deepminds(Pysc2).
+The framework used in this Repository is Pytorch. The multi-processing method is basically built in. The agents are trained by PAAC(Parallel Advantage Actor Critic) strategy.
 
 ## 1. MoveToBeacon  
 
