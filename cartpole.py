@@ -53,7 +53,7 @@ while True:
     total_target, total_adv = agent.get_gaes(total_reward, total_done, total_value, total_next_value)
     total_target, total_adv = np.stack(total_target), np.stack(total_adv)
 
-    agent.assign_policy_parameters()
+    #agent.assign_policy_parameters()
     agent.train_model(total_state, total_action, total_target, total_adv)
     print(ep, step)
     writer.add_scalar('data/reward', step, ep)

@@ -9,7 +9,6 @@ class PPO_MLP:
         self.output_size = output_size
         self.sess = sess
         self.model = MLPActorCritic('network', state_size, output_size)
-        self.old_model = MLPActorCritic('old_network', state_size, output_size)
 
         self.gamma = 0.99
         self.lamda = 0.99
@@ -21,19 +20,15 @@ class PPO_MLP:
         self.epoch = 3
 
         self.pi_trainable = self.model.get_trainable_variables()
-        self.old_pi_trainable = self.old_model.get_trainable_variables()
-
-        with tf.variable_scope('assign_op'):
-            self.assign_ops = []
-            for v_old, v in zip(self.old_pi_trainable, self.pi_trainable):
-                self.assign_ops.append(tf.assign(v_old, v))
 
         self.actions = tf.placeholder(dtype=tf.int32, shape=[None])
         self.targets = tf.placeholder(dtype=tf.float32, shape=[None])
         self.adv = tf.placeholder(dtype=tf.float32, shape=[None])
+        self.old_policy = tf.placeholder(dtype=tf.float32, shape=[None, self.output_size])
 
         act_probs = self.model.actor
-        act_probs_old = self.old_model.actor
+        act_probs_old = self.old_policy
+        #act_probs_old = self.old_model.actor
 
         act_probs = tf.reduce_sum(tf.multiply(act_probs, tf.one_hot(indices=self.actions, depth=self.output_size)), axis=1)
         act_probs_old = tf.reduce_sum(tf.multiply(act_probs_old, tf.one_hot(indices=self.actions, depth=self.output_size)), axis=1)
@@ -55,9 +50,9 @@ class PPO_MLP:
         gvs = optimizer.compute_gradients(total_loss, var_list=self.pi_trainable)
         capped_gvs = [(tf.clip_by_value(grad, self.grad_clip_min, self.grad_clip_max), var) for grad, var in gvs]
         self.train_op = optimizer.apply_gradients(capped_gvs)
-        #self.train_op = optimizer.minimize(total_loss, var_list=self.pi_trainable)
 
     def train_model(self, state, action, targets, advs):
+        old_policy = self.sess.run(self.model.actor, feed_dict={self.model.input: state})
         sample_range = np.arange(len(state))
         for ep in range(self.epoch):
             np.random.shuffle(sample_range)
@@ -67,14 +62,12 @@ class PPO_MLP:
                 action_batch = [action[i] for i in sample_idx]
                 advs_batch = [targets[i] for i in sample_idx]
                 targets_batch = [advs[i] for i in sample_idx]
+                old_policy_batch = [old_policy[i] for i in sample_idx]
                 self.sess.run(self.train_op, feed_dict={self.model.input: state_batch,
-                                                self.old_model.input: state_batch,
                                                 self.actions: action_batch,
                                                 self.adv: advs_batch,
-                                                self.targets: targets_batch})
-
-    def assign_policy_parameters(self):
-        return self.sess.run(self.assign_ops)
+                                                self.targets: targets_batch,
+                                                self.old_policy: old_policy_batch})
 
     def get_action(self, state):
         action = self.sess.run(self.model.actor, feed_dict={self.model.input: state})
