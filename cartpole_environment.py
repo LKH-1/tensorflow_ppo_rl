@@ -2,10 +2,10 @@ from multiprocessing import Pipe, Process
 import gym
 
 class Environment(Process):
-    def __init__(self, env_idx, child_conn):
+    def __init__(self, env_idx, child_conn, visualize):
         super(Environment, self).__init__()
         self.env = gym.make('CartPole-v0')
-        self.is_render = False
+        self.is_render = visualize
         self.env_idx = env_idx
         self.child_conn = child_conn
         self.episode = 0

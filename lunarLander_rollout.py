@@ -27,7 +27,7 @@ parent_conns = []
 child_conns = []
 for idx in range(num_worker):
     parent_conn, child_conn = Pipe()
-    work = Environment(idx, child_conn)
+    work = Environment(idx, child_conn, visualize)
     work.start()
     works.append(work)
     parent_conns.append(parent_conn)
