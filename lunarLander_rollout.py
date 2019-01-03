@@ -2,7 +2,7 @@ from agent import PPO_MLP
 import numpy as np
 import tensorflow as tf
 from tensorboardX import SummaryWriter
-from lunarlander_environment import Environment
+from lunarLander_environment import Environment
 from multiprocessing import Process, Pipe
 
 writer = SummaryWriter()
