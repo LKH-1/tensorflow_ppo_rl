@@ -88,7 +88,7 @@ class PPO_CNN:
             gaes[t] = gaes[t] + (1-dones[t]) * self.gamma * self.lamda * gaes[t + 1]
         
         target = gaes + values
-        #gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
+        gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
         return gaes, target
 
 class PPO_MLP:
