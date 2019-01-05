@@ -3,12 +3,14 @@ import tensorflow as tf
 from model import *
 import copy
 
-class PPO_MLP:
-    def __init__(self, sess, state_size, output_size):
-        self.state_size = state_size
-        self.output_size = output_size
+class PPO_CNN:
+    def __init__(self, sess, window_size, obs_stack, output_size):
         self.sess = sess
-        self.model = MLPActorCritic('network', state_size, output_size)
+        self.window_size = window_size
+        self.obs_stack = obs_stack
+        self.output_size = output_size
+
+        self.model = CNNActorCritic('network', window_size, obs_stack, output_size)
 
         self.gamma = 0.99
         self.lamda = 0.95
@@ -90,49 +92,3 @@ class PPO_MLP:
         target = gaes + values
         gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
         return gaes, target
-
-if __name__ == '__main__':
-    
-    sess = tf.Session()
-    state_size, output_size = 8, 4
-    
-    ppo = PPO_MLP(sess, state_size, output_size)
-    sess.run(tf.global_variables_initializer())
-    ppo.assign_policy_parameters()
-
-    state, next_state = np.random.rand(5, state_size), np.random.rand(5, state_size)
-
-    
-    state = np.random.rand(5, state_size)
-    
-    actions = [0, 3, 2, 1, 2]
-    target = np.random.rand(5)
-    adv = np.random.rand(5)
-    ppo.train_model(state, actions, target, adv)
-    
-
-
-    '''    
-    reward = [1, 0, 1, 1, 0]
-    done = [False, False, True, False, True]
-    value = [5, 3, 4, 2, 5]
-    next_value = [3, 4, 2, 5, 1]
-
-    result = ppo.get_gaes(reward, done, value, next_value)
-    print(result)
-    '''
-    
-
-    # use_gae == False
-    # target : 0 + 0.99 * (1 - 1) * 1 = 0       adv : -5
-    # target : 1 + 0.99 * (1 - 0) * 5 = 5.95    adv : 3.95
-    # target : 1 + 0.99 * (1 - 1) * 2 = 1       adv : -3
-    # target : 0 + 0.99 * (1 - 0) * 4 = 3.96    adv : 0.96
-    # target : 1 + 0.99 * (1 - 0) * 3 = 3.97    adv : -1.03
-
-    # use_gae == True
-    # deltas : 0 + 0.99 * (1 - 1) * 1 = 0       adv : -5
-    # deltas : 1 + 0.99 * (1 - 0) * 5 = 5.95    
-    # deltas : 1 + 0.99 * (1 - 1) * 2 = 1       
-    # deltas : 0 + 0.99 * (1 - 0) * 4 = 3.96    
-    # deltas : 1 + 0.99 * (1 - 0) * 3 = 3.97    
