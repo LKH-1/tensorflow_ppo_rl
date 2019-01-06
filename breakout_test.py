@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from agent import PPO_CNN
 from tensorboardX import SummaryWriter
+import time
 
 writer = SummaryWriter()
 sess = tf.Session()
@@ -19,12 +20,12 @@ sample_idx = 0
 score = 0
 episode = 0
 
-num_worker = 16
+num_worker = 2
 num_step = 256
 works = []
 parent_conns = []
 child_conns = []
-visualize = False
+visualize = True
 
 for idx in range(num_worker):
     parent_conn, child_conn = Pipe()
@@ -76,24 +77,4 @@ while True:
             print(episode, score)
             score = 0
 
-    total_state = np.stack(total_state).transpose([1, 0, 2, 3, 4]).reshape([-1, window_size, window_size, obs_stack])
-    total_next_state = np.stack(total_next_state).transpose([1, 0, 2, 3, 4]).reshape([-1, window_size, window_size, obs_stack])
-    total_action = np.stack(total_action).transpose([1, 0]).reshape([-1])
-    total_done = np.stack(total_done).transpose([1, 0]).reshape([-1])
-    total_reward = np.stack(total_reward).transpose([1, 0]).reshape([-1])
-
-    total_target, total_adv = [], []
-    for idx in range(num_worker):
-        value, next_value = agent.get_value(total_state[idx * num_step:(idx + 1) * num_step],
-                                            total_next_state[idx * num_step:(idx + 1) * num_step])
-        adv, target = agent.get_gaes(total_reward[idx * num_step:(idx + 1) * num_step],
-                                    total_done[idx * num_step:(idx + 1) * num_step],
-                                    value,
-                                    next_value)
-        total_target.append(target)
-        total_adv.append(adv)
-
-    agent.train_model(total_state, total_action, np.hstack(total_target), np.hstack(total_adv))
-
-    writer.add_scalar('data/reward_per_rollout', sum(total_reward)/(num_worker), global_update)
-    saver.save(sess, 'breakout/model')
+        time.sleep(0.01)

@@ -21,9 +21,6 @@ class CNNActorCritic:
 
             self.scope = tf.get_variable_scope().name
 
-            print(self.actor)
-            print(self.critic)
-
     
     def get_action_prob(self, obs):
         return self.sess.run(self.act_probs, feed_dict={self.obs: obs})
