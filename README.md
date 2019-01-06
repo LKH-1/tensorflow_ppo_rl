@@ -10,3 +10,12 @@ The framework used in this Repository is Tensorflow. The multi-processing method
   <img src="sources/lunarlander.gif" width="49%" height='300'>
   <img src="sources/lunarlander.png" width="50%" height='300'>
 </div>
+
+## 2. BreakoutDeterministic-v4
+
+###### BreakoutDeterministic-v4
+
+<div align="center">
+  <img src="sources/breakout.gif" width="49%" height='300'>
+  <img src="sources/lunarlander.png" width="50%" height='300'>
+</div>
