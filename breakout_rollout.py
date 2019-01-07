@@ -12,7 +12,7 @@ window_size, output_size, obs_stack = 84, 3, 4
 agent = PPO_CNN(sess, window_size, obs_stack, output_size)
 sess.run(tf.global_variables_initializer())
 saver = tf.train.Saver()
-saver.restore(sess, 'breakout/model')
+#saver.restore(sess, 'breakout/model')
 
 global_update = 0
 sample_idx = 0
