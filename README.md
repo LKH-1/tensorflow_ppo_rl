@@ -17,5 +17,5 @@ The framework used in this Repository is Tensorflow. The multi-processing method
 
 <div align="center">
   <img src="sources/breakout.gif" width="24%" height='300'>
-  <img src="sources/lunarlander.png" width="75%" height='300'>
+  <img src="sources/breakout.png" width="75%" height='300'>
 </div>
