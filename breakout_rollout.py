@@ -19,7 +19,7 @@ sample_idx = 0
 score = 0
 episode = 0
 
-num_worker = 16
+num_worker = 8
 num_step = 256
 works = []
 parent_conns = []

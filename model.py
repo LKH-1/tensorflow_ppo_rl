@@ -13,11 +13,12 @@ class CNNActorCritic:
             self.conv3 = tf.layers.conv2d(inputs=self.conv2, filters=64, kernel_size=[3, 3], strides=[1, 1], padding='VALID', activation=tf.nn.relu)
 
             self.reshape = tf.reshape(self.conv3, [-1, 7 * 7 * 64])
-            self.dense_1 = tf.layers.dense(inputs=self.reshape, units=512, activation=tf.nn.relu)
-            self.dense_2 = tf.layers.dense(inputs=self.dense_1, units=512, activation=tf.nn.relu)
+            self.dense_1 = tf.layers.dense(inputs=self.reshape, units=1024, activation=tf.nn.relu)
+            self.dense_2 = tf.layers.dense(inputs=self.dense_1, units=1024, activation=tf.nn.relu)
+            self.dense_3 = tf.layers.dense(inputs=self.dense_2, units=512, activation=tf.nn.relu)
             
-            self.actor = tf.layers.dense(inputs=self.dense_2, units=self.output_size, activation=tf.nn.softmax)
-            self.critic = tf.layers.dense(inputs=self.dense_2, units=1, activation=None)
+            self.actor = tf.layers.dense(inputs=self.dense_3, units=self.output_size, activation=tf.nn.softmax)
+            self.critic = tf.layers.dense(inputs=self.dense_3, units=1, activation=None)
 
             self.scope = tf.get_variable_scope().name
 
