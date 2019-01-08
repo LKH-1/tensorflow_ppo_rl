@@ -49,7 +49,7 @@ class PPO_CNN:
 
         total_loss = actor_loss + critic_loss
         optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
-        self.train_op = optimizer.minimize(total_loss)
+        #self.train_op = optimizer.minimize(total_loss)
         gvs = optimizer.compute_gradients(total_loss, var_list=self.pi_trainable)
         capped_gvs = [(tf.clip_by_value(grad, self.grad_clip_min, self.grad_clip_max), var) for grad, var in gvs]
         self.train_op = optimizer.apply_gradients(capped_gvs)
@@ -137,7 +137,7 @@ class PPO_MLP:
 
         total_loss = actor_loss + critic_loss
         optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
-        self.train_op = optimizer.minimize(total_loss)
+        #self.train_op = optimizer.minimize(total_loss)
         gvs = optimizer.compute_gradients(total_loss, var_list=self.pi_trainable)
         capped_gvs = [(tf.clip_by_value(grad, self.grad_clip_min, self.grad_clip_max), var) for grad, var in gvs]
         self.train_op = optimizer.apply_gradients(capped_gvs)
