@@ -19,9 +19,6 @@
 
 
 
-
-
-
 ## ToDo List
 - [x] PPO agent
 - [ ] A2C agent
@@ -42,3 +39,5 @@
 - [https://github.com/chagmgang](https://github.com/chagmgang)
 - [https://github.com/SunandBean](https://github.com/SunandBean)
 - [ttps://github.com/TinkTheBoush](ttps://github.com/TinkTheBoush)
+
+## Thanks for Contributing to our Repository
