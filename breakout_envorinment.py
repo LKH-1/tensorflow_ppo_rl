@@ -16,7 +16,6 @@ class Environment(Process):
         self.history = np.zeros([84, 84, 4])
         self.env = gym.make('BreakoutDeterministic-v4')
         self.reset()
-        _, _, _, _ = self.env.step(1)
         self.lives = self.env.env.ale.lives()
 
     def run(self):
