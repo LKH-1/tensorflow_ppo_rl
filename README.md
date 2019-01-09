@@ -38,6 +38,6 @@
 
 - [https://github.com/chagmgang](https://github.com/chagmgang)
 - [https://github.com/SunandBean](https://github.com/SunandBean)
-- [ttps://github.com/TinkTheBoush](ttps://github.com/TinkTheBoush)
+- [https://github.com/TinkTheBoush](https://github.com/TinkTheBoush)
 
 ## Thanks for Contributing to our Repository
