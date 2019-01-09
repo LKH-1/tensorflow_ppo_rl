@@ -1,5 +1,5 @@
 import tensorflow as tf
-##test
+
 class CNNActorCritic:
     def __init__(self, name, window_size, obs_stack, output_size):
         self.window_size = window_size
