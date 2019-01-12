@@ -28,7 +28,7 @@ class A2C_CNN:
         act_probs = self.model.actor
 
         act_probs = tf.reduce_sum(tf.multiply(act_probs,tf.one_hot(indices=self.actions,depth=self.output_size)),axis=1)
-        cross_entropy = tf.log(tf.clip_by_value(act_probs,1e-5, 1.0))*self.adv
+        cross_entropy = tf.log(tf.clip_by_value(act_probs, 1e-10, 1.0))*self.adv
         actor_loss = -tf.reduce_sum(cross_entropy)
 
         critic_loss = tf.losses.mean_squared_error(tf.squeeze(self.model.critic),self.targets)
@@ -96,7 +96,7 @@ class A2C_MLP:
         act_probs = self.model.actor
 
         act_probs = tf.reduce_sum(tf.multiply(act_probs,tf.one_hot(indices=self.actions, depth=self.output_size)),axis=1)
-        cross_entropy = tf.log(tf.clip_by_value(act_probs, 1e-10, 1 - 1e-10)) * self.adv
+        cross_entropy = tf.log(tf.clip_by_value(act_probs, 1e-10, 1.0)) * self.adv
         actor_loss = -tf.reduce_sum(cross_entropy)
 
         critic_loss = tf.losses.mean_squared_error(tf.squeeze(self.model.critic),self.targets)
