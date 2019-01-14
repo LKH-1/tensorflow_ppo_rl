@@ -68,7 +68,7 @@ class A2C_CNN:
         gae = 0
         for t in range(num_step - 1, -1, -1):
             delta = rewards[t] + self.gamma * \
-                next_values[t] * (1 - done[t]) - values[t]
+                next_values[t] * (1 - dones[t]) - values[t]
             gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
 
             discounted_return[t] = gae + values[t]
@@ -141,7 +141,7 @@ class A2C_MLP:
         gae = 0
         for t in range(num_step - 1, -1, -1):
             delta = rewards[t] + self.gamma * \
-                next_values[t] * (1 - done[t]) - values[t]
+                next_values[t] * (1 - dones[t]) - values[t]
             gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
 
             discounted_return[t] = gae + values[t]
@@ -234,7 +234,7 @@ class PPO_CNN:
         gae = 0
         for t in range(num_step - 1, -1, -1):
             delta = rewards[t] + self.gamma * \
-                next_values[t] * (1 - done[t]) - values[t]
+                next_values[t] * (1 - dones[t]) - values[t]
             gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
 
             discounted_return[t] = gae + values[t]
@@ -325,7 +325,7 @@ class PPO_MLP:
         gae = 0
         for t in range(num_step - 1, -1, -1):
             delta = rewards[t] + self.gamma * \
-                next_values[t] * (1 - done[t]) - values[t]
+                next_values[t] * (1 - dones[t]) - values[t]
             gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
 
             discounted_return[t] = gae + values[t]
