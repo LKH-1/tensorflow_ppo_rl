@@ -63,15 +63,20 @@ class A2C_CNN:
         return value, next_value
 
     def get_gaes(self, rewards, dones, values, next_values):
-        deltas = [r + self.gamma * (1 - d) * nv - v for r, d, nv, v in zip(rewards, dones, next_values, values)]
-        deltas = np.stack(deltas)
-        gaes = copy.deepcopy(deltas)
-        for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
+        num_step = len(rewards)
+        discounted_return = np.empty([num_step])
+        gae = 0
+        for t in range(num_step - 1, -1, -1):
+            delta = rewards[t] + self.gamma * \
+                next_values[t] * (1 - done[t]) - values[t]
+            gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
 
-        target = gaes + values
-        gaes = (gaes - gaes.mean()) / (gaes.std() + 1e-30)
-        return gaes, target
+            discounted_return[t] = gae + values[t]
+
+        # For Actor
+        adv = discounted_return - values
+
+        return adv, discounted_return
 
 class A2C_MLP:
     def __init__(self, sess, state_size, output_size):
@@ -131,15 +136,20 @@ class A2C_MLP:
         return value, next_value
 
     def get_gaes(self, rewards, dones, values, next_values):
-        deltas = [r + self.gamma * (1 - d) * nv - v for r, d, nv, v in zip(rewards, dones, next_values, values)]
-        deltas = np.stack(deltas)
-        gaes = copy.deepcopy(deltas)
-        for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
+        num_step = len(rewards)
+        discounted_return = np.empty([num_step])
+        gae = 0
+        for t in range(num_step - 1, -1, -1):
+            delta = rewards[t] + self.gamma * \
+                next_values[t] * (1 - done[t]) - values[t]
+            gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
 
-        target = gaes + values
-        gaes = (gaes - gaes.mean()) / (gaes.std() + 1e-30)
-        return gaes, target
+            discounted_return[t] = gae + values[t]
+
+        # For Actor
+        adv = discounted_return - values
+
+        return adv, discounted_return
 
 class PPO_CNN:
     def __init__(self, sess, window_size, obs_stack, output_size):
@@ -219,15 +229,20 @@ class PPO_CNN:
         return value, next_value
 
     def get_gaes(self, rewards, dones, values, next_values):
-        deltas = [r + self.gamma * (1-d) * nv - v for r, d, nv, v in zip(rewards, dones, next_values, values)]
-        deltas = np.stack(deltas)
-        gaes = copy.deepcopy(deltas)
-        for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
-        
-        target = gaes + values
-        gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
-        return gaes, target
+        num_step = len(rewards)
+        discounted_return = np.empty([num_step])
+        gae = 0
+        for t in range(num_step - 1, -1, -1):
+            delta = rewards[t] + self.gamma * \
+                next_values[t] * (1 - done[t]) - values[t]
+            gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
+
+            discounted_return[t] = gae + values[t]
+
+        # For Actor
+        adv = discounted_return - values
+
+        return adv, discounted_return
 
 class PPO_MLP:
     def __init__(self, sess, state_size, output_size):
@@ -305,15 +320,20 @@ class PPO_MLP:
         return value, next_value
 
     def get_gaes(self, rewards, dones, values, next_values):
-        deltas = [r + self.gamma * (1-d) * nv - v for r, d, nv, v in zip(rewards, dones, next_values, values)]
-        deltas = np.stack(deltas)
-        gaes = copy.deepcopy(deltas)
-        for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
-        
-        target = gaes + values
-        gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
-        return gaes, target
+        num_step = len(rewards)
+        discounted_return = np.empty([num_step])
+        gae = 0
+        for t in range(num_step - 1, -1, -1):
+            delta = rewards[t] + self.gamma * \
+                next_values[t] * (1 - done[t]) - values[t]
+            gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
+
+            discounted_return[t] = gae + values[t]
+
+        # For Actor
+        adv = discounted_return - values
+
+        return adv, discounted_return
 
 if __name__ == '__main__':
     
