@@ -67,7 +67,7 @@ class A2C_CNN:
         deltas = np.stack(deltas)
         gaes = copy.deepcopy(deltas)
         for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = gaes[t] + (1 - dones[t]) * self.gamma * self.lamda * gaes[t + 1]
+            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
 
         target = gaes + values
         gaes = (gaes - gaes.mean()) / (gaes.std() + 1e-30)
@@ -135,7 +135,7 @@ class A2C_MLP:
         deltas = np.stack(deltas)
         gaes = copy.deepcopy(deltas)
         for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = gaes[t] + (1 - dones[t]) * self.gamma * self.lamda * gaes[t + 1]
+            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
 
         target = gaes + values
         gaes = (gaes - gaes.mean()) / (gaes.std() + 1e-30)
@@ -223,7 +223,7 @@ class PPO_CNN:
         deltas = np.stack(deltas)
         gaes = copy.deepcopy(deltas)
         for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = gaes[t] + (1-dones[t]) * self.gamma * self.lamda * gaes[t + 1]
+            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
         
         target = gaes + values
         gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
@@ -309,7 +309,7 @@ class PPO_MLP:
         deltas = np.stack(deltas)
         gaes = copy.deepcopy(deltas)
         for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = gaes[t] + (1-dones[t]) * self.gamma * self.lamda * gaes[t + 1]
+            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
         
         target = gaes + values
         gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
