@@ -28,7 +28,7 @@ class A2C_CNN:
         act_probs = self.model.actor
 
         act_probs = tf.reduce_sum(tf.multiply(act_probs,tf.one_hot(indices=self.actions,depth=self.output_size)),axis=1)
-        cross_entropy = tf.log(tf.clip_by_value(act_probs,1e-5, 1.0))*self.adv
+        cross_entropy = tf.log(tf.clip_by_value(act_probs, 1e-10, 1.0))*self.adv
         actor_loss = -tf.reduce_sum(cross_entropy)
 
         critic_loss = tf.losses.mean_squared_error(tf.squeeze(self.model.critic),self.targets)
@@ -67,7 +67,7 @@ class A2C_CNN:
         deltas = np.stack(deltas)
         gaes = copy.deepcopy(deltas)
         for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = gaes[t] + (1 - dones[t]) * self.gamma * self.lamda * gaes[t + 1]
+            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
 
         target = gaes + values
         gaes = (gaes - gaes.mean()) / (gaes.std() + 1e-30)
@@ -96,7 +96,7 @@ class A2C_MLP:
         act_probs = self.model.actor
 
         act_probs = tf.reduce_sum(tf.multiply(act_probs,tf.one_hot(indices=self.actions, depth=self.output_size)),axis=1)
-        cross_entropy = tf.log(tf.clip_by_value(act_probs, 1e-10, 1 - 1e-10)) * self.adv
+        cross_entropy = tf.log(tf.clip_by_value(act_probs, 1e-10, 1.0)) * self.adv
         actor_loss = -tf.reduce_sum(cross_entropy)
 
         critic_loss = tf.losses.mean_squared_error(tf.squeeze(self.model.critic),self.targets)
@@ -135,7 +135,7 @@ class A2C_MLP:
         deltas = np.stack(deltas)
         gaes = copy.deepcopy(deltas)
         for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = gaes[t] + (1 - dones[t]) * self.gamma * self.lamda * gaes[t + 1]
+            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
 
         target = gaes + values
         gaes = (gaes - gaes.mean()) / (gaes.std() + 1e-30)
@@ -223,7 +223,7 @@ class PPO_CNN:
         deltas = np.stack(deltas)
         gaes = copy.deepcopy(deltas)
         for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = gaes[t] + (1-dones[t]) * self.gamma * self.lamda * gaes[t + 1]
+            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
         
         target = gaes + values
         gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
@@ -309,7 +309,7 @@ class PPO_MLP:
         deltas = np.stack(deltas)
         gaes = copy.deepcopy(deltas)
         for t in reversed(range(len(deltas) - 1)):
-            gaes[t] = gaes[t] + (1-dones[t]) * self.gamma * self.lamda * gaes[t + 1]
+            gaes[t] = (1 - dones[t]) * gaes[t] +  self.gamma * self.lamda * gaes[t + 1]
         
         target = gaes + values
         gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
