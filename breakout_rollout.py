@@ -3,13 +3,14 @@ from multiprocessing import Pipe
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from agent import PPO_CNN
+from agent import PPO_CNN, A2C_CNN
 from tensorboardX import SummaryWriter
 
 writer = SummaryWriter()
 sess = tf.Session()
 window_size, output_size, obs_stack = 84, 3, 4
-agent = PPO_CNN(sess, window_size, obs_stack, output_size)
+agent = A2C_CNN(sess, window_size, obs_stack, output_size)
+#agent = PPO_CNN(sess, window_size, obs_stack, output_size)
 sess.run(tf.global_variables_initializer())
 saver = tf.train.Saver()
 #saver.restore(sess, 'breakout/model')
@@ -19,7 +20,7 @@ sample_idx = 0
 score = 0
 episode = 0
 
-num_worker = 8
+num_worker = 16
 num_step = 256
 works = []
 parent_conns = []

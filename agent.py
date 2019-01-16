@@ -14,7 +14,7 @@ class A2C_CNN:
 
         self.gamma = 0.99
         self.lamda = 0.95
-        self.lr = 0.000001
+        self.lr = 0.00005
         self.batch_size = 32
         self.grad_clip_max = 1.0
         self.grad_clip_min = -1.0
@@ -28,13 +28,14 @@ class A2C_CNN:
         act_probs = self.model.actor
 
         act_probs = tf.reduce_sum(tf.multiply(act_probs,tf.one_hot(indices=self.actions,depth=self.output_size)),axis=1)
-        cross_entropy = tf.log(tf.clip_by_value(act_probs, 1e-10, 1.0))*self.adv
+        cross_entropy = tf.log(tf.clip_by_value(act_probs,1e-10, 1.0))*self.adv
         actor_loss = -tf.reduce_sum(cross_entropy)
 
         critic_loss = tf.losses.mean_squared_error(tf.squeeze(self.model.critic),self.targets)
 
         total_loss = actor_loss + critic_loss
         optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
+        #self.train_op = optimizer.minimize(total_loss)
         gvs = optimizer.compute_gradients(total_loss, var_list=self.pi_trainable)
         capped_gvs = [(tf.clip_by_value(grad, self.grad_clip_min, self.grad_clip_max), var) for grad, var in gvs]
         self.train_op = optimizer.apply_gradients(capped_gvs)
@@ -63,20 +64,15 @@ class A2C_CNN:
         return value, next_value
 
     def get_gaes(self, rewards, dones, values, next_values):
-        num_step = len(rewards)
-        discounted_return = np.empty([num_step])
-        gae = 0
-        for t in range(num_step - 1, -1, -1):
-            delta = rewards[t] + self.gamma * \
-                next_values[t] * (1 - dones[t]) - values[t]
-            gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
+        deltas = [r + self.gamma * (1 - d) * nv - v for r, d, nv, v in zip(rewards, dones, next_values, values)]
+        deltas = np.stack(deltas)
+        gaes = copy.deepcopy(deltas)
+        for t in reversed(range(len(deltas) - 1)):
+            gaes[t] = gaes[t] + (1 - dones[t]) * self.gamma * self.lamda * gaes[t + 1]
 
-            discounted_return[t] = gae + values[t]
-
-        # For Actor
-        adv = discounted_return - values
-
-        return adv, discounted_return
+        target = gaes + values
+        gaes = (gaes - gaes.mean()) / (gaes.std() + 1e-30)
+        return gaes, target
 
 class A2C_MLP:
     def __init__(self, sess, state_size, output_size):
@@ -100,7 +96,7 @@ class A2C_MLP:
 
         act_probs = self.model.actor
 
-        act_probs = tf.reduce_sum(tf.multiply(act_probs,tf.one_hot(indices=self.actions, depth=self.output_size)),axis=1)
+        act_probs = tf.reduce_sum(tf.multiply(act_probs,tf.one_hot(indices=self.actions,depth=self.output_size)),axis=1)
         cross_entropy = tf.log(tf.clip_by_value(act_probs, 1e-10, 1.0)) * self.adv
         actor_loss = -tf.reduce_sum(cross_entropy)
 
@@ -108,6 +104,7 @@ class A2C_MLP:
 
         total_loss = actor_loss + critic_loss
         optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
+        #self.train_op = optimizer.minimize(total_loss)
         gvs = optimizer.compute_gradients(total_loss, var_list=self.pi_trainable)
         capped_gvs = [(tf.clip_by_value(grad, self.grad_clip_min, self.grad_clip_max), var) for grad, var in gvs]
         self.train_op = optimizer.apply_gradients(capped_gvs)
@@ -136,20 +133,16 @@ class A2C_MLP:
         return value, next_value
 
     def get_gaes(self, rewards, dones, values, next_values):
-        num_step = len(rewards)
-        discounted_return = np.empty([num_step])
-        gae = 0
-        for t in range(num_step - 1, -1, -1):
-            delta = rewards[t] + self.gamma * \
-                next_values[t] * (1 - dones[t]) - values[t]
-            gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
+        deltas = [r + self.gamma * (1 - d) * nv - v for r, d, nv, v in zip(rewards, dones, next_values, values)]
+        deltas = np.stack(deltas)
+        gaes = copy.deepcopy(deltas)
+        for t in reversed(range(len(deltas) - 1)):
+            gaes[t] = gaes[t] + (1 - dones[t]) * self.gamma * self.lamda * gaes[t + 1]
 
-            discounted_return[t] = gae + values[t]
+        target = gaes + values
+        gaes = (gaes - gaes.mean()) / (gaes.std() + 1e-30)
+        return deltas, deltas + values
 
-        # For Actor
-        adv = discounted_return - values
-
-        return adv, discounted_return
 
 class PPO_CNN:
     def __init__(self, sess, window_size, obs_stack, output_size):
@@ -178,6 +171,7 @@ class PPO_CNN:
 
         act_probs = self.model.actor
         act_probs_old = self.old_policy
+        #act_probs_old = self.old_model.actor
 
         act_probs = tf.reduce_sum(tf.multiply(act_probs, tf.one_hot(indices=self.actions, depth=self.output_size)), axis=1)
         act_probs_old = tf.reduce_sum(tf.multiply(act_probs_old, tf.one_hot(indices=self.actions, depth=self.output_size)), axis=1)
@@ -196,6 +190,7 @@ class PPO_CNN:
 
         total_loss = actor_loss + critic_loss
         optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
+        #self.train_op = optimizer.minimize(total_loss)
         gvs = optimizer.compute_gradients(total_loss, var_list=self.pi_trainable)
         capped_gvs = [(tf.clip_by_value(grad, self.grad_clip_min, self.grad_clip_max), var) for grad, var in gvs]
         self.train_op = optimizer.apply_gradients(capped_gvs)
@@ -229,20 +224,15 @@ class PPO_CNN:
         return value, next_value
 
     def get_gaes(self, rewards, dones, values, next_values):
-        num_step = len(rewards)
-        discounted_return = np.empty([num_step])
-        gae = 0
-        for t in range(num_step - 1, -1, -1):
-            delta = rewards[t] + self.gamma * \
-                next_values[t] * (1 - dones[t]) - values[t]
-            gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
-
-            discounted_return[t] = gae + values[t]
-
-        # For Actor
-        adv = discounted_return - values
-
-        return adv, discounted_return
+        deltas = [r + self.gamma * (1-d) * nv - v for r, d, nv, v in zip(rewards, dones, next_values, values)]
+        deltas = np.stack(deltas)
+        gaes = copy.deepcopy(deltas)
+        for t in reversed(range(len(deltas) - 1)):
+            gaes[t] = gaes[t] + (1-dones[t]) * self.gamma * self.lamda * gaes[t + 1]
+        
+        target = gaes + values
+        gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
+        return gaes, target
 
 class PPO_MLP:
     def __init__(self, sess, state_size, output_size):
@@ -269,6 +259,7 @@ class PPO_MLP:
 
         act_probs = self.model.actor
         act_probs_old = self.old_policy
+        #act_probs_old = self.old_model.actor
 
         act_probs = tf.reduce_sum(tf.multiply(act_probs, tf.one_hot(indices=self.actions, depth=self.output_size)), axis=1)
         act_probs_old = tf.reduce_sum(tf.multiply(act_probs_old, tf.one_hot(indices=self.actions, depth=self.output_size)), axis=1)
@@ -287,6 +278,7 @@ class PPO_MLP:
 
         total_loss = actor_loss + critic_loss
         optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
+        #self.train_op = optimizer.minimize(total_loss)
         gvs = optimizer.compute_gradients(total_loss, var_list=self.pi_trainable)
         capped_gvs = [(tf.clip_by_value(grad, self.grad_clip_min, self.grad_clip_max), var) for grad, var in gvs]
         self.train_op = optimizer.apply_gradients(capped_gvs)
@@ -320,63 +312,41 @@ class PPO_MLP:
         return value, next_value
 
     def get_gaes(self, rewards, dones, values, next_values):
-        num_step = len(rewards)
-        discounted_return = np.empty([num_step])
-        gae = 0
-        for t in range(num_step - 1, -1, -1):
-            delta = rewards[t] + self.gamma * \
-                next_values[t] * (1 - dones[t]) - values[t]
-            gae = delta + self.gamma * self.lamda * (1 - dones[t]) * gae
-
-            discounted_return[t] = gae + values[t]
-
-        # For Actor
-        adv = discounted_return - values
-
-        return adv, discounted_return
+        deltas = [r + self.gamma * (1-d) * nv - v for r, d, nv, v in zip(rewards, dones, next_values, values)]
+        deltas = np.stack(deltas)
+        gaes = copy.deepcopy(deltas)
+        for t in reversed(range(len(deltas) - 1)):
+            gaes[t] = gaes[t] + (1-dones[t]) * self.gamma * self.lamda * gaes[t + 1]
+        
+        target = gaes + values
+        gaes = (gaes - gaes.mean())/(gaes.std() + 1e-30)
+        return gaes, target
 
 if __name__ == '__main__':
     
-    sess = tf.Session()
-    state_size, output_size = 8, 4
-    
-    ppo = PPO_MLP(sess, state_size, output_size)
-    sess.run(tf.global_variables_initializer())
-    ppo.assign_policy_parameters()
+    reward = [1, 0, 0, 1, 0, 1, 1, 0, 0, 1]
+    value = [5, 4, 3, 2, 1, 0, 0, 1, 2, 3]
+    next_value = [4, 3, 2, 1, 0, 0, 1, 2, 3, 4]
+    done = [0, 1, 1, 0, 0, 0, 0, 1, 0, 0]
+    delta = [-0.04, -4. -3. -0.01, -1, 1, 1.99, -1, 0.97, 1.96]
+    gae = [-3.802, -4, -3, 0.807129905, 0.868824992, 1.98705475, 1.0496, -1, 2.81338, 1.96]
 
-    state, next_state = np.random.rand(5, state_size), np.random.rand(5, state_size)
+    gamma = 0.99
+    lamda = 0.95
 
-    
-    state = np.random.rand(5, state_size)
-    
-    actions = [0, 3, 2, 1, 2]
-    target = np.random.rand(5)
-    adv = np.random.rand(5)
-    ppo.train_model(state, actions, target, adv)
-    
+    delta = np.stack([r + (1-d) * gamma * v_n - v for r, d, v_n, v in zip(reward, done, next_value, value)])
+    gaes = copy.deepcopy(delta)
+    for t in reversed(range(len(gaes) - 1)):  # is T-1, where T is time step which run policy
+        gaes[t] = gaes[t] + (1-done[t]) * lamda * gamma * gaes[t + 1]
+    print(gaes)
 
-
-    '''    
-    reward = [1, 0, 1, 1, 0]
-    done = [False, False, True, False, True]
-    value = [5, 3, 4, 2, 5]
-    next_value = [3, 4, 2, 5, 1]
-
-    result = ppo.get_gaes(reward, done, value, next_value)
-    print(result)
+    target = delta + value
+    print(target)
     '''
-    
-
-    # use_gae == False
-    # target : 0 + 0.99 * (1 - 1) * 1 = 0       adv : -5
-    # target : 1 + 0.99 * (1 - 0) * 5 = 5.95    adv : 3.95
-    # target : 1 + 0.99 * (1 - 1) * 2 = 1       adv : -3
-    # target : 0 + 0.99 * (1 - 0) * 4 = 3.96    adv : 0.96
-    # target : 1 + 0.99 * (1 - 0) * 3 = 3.97    adv : -1.03
-
-    # use_gae == True
-    # deltas : 0 + 0.99 * (1 - 1) * 1 = 0       adv : -5
-    # deltas : 1 + 0.99 * (1 - 0) * 5 = 5.95    
-    # deltas : 1 + 0.99 * (1 - 1) * 2 = 1       
-    # deltas : 0 + 0.99 * (1 - 0) * 4 = 3.96    
-    # deltas : 1 + 0.99 * (1 - 0) * 3 = 3.97    
+    r = [1, 0, 0, 1, 0, 1, 1, 0, 0, 1]
+    v(s_t) = [5, 4, 3, 2, 1, 0, 0, 1, 2, 3]
+    v(s_t+1) = [4, 3, 2, 1, 0, 0, 1, 2, 3, 4]
+    done(t) = [0, 1, 1, 0, 0, 0, 0, 1, 0, 0]
+    delta = [-0.04, -4. -3. -0.01, -1, 1, 1.99, -1, 0.97, 1.96]
+    gae = [-3.802, -4, -3, 0.807129905, 0.868824992, 1.98705475, 1.0496, -1, 2.81338, 1.96]
+    '''

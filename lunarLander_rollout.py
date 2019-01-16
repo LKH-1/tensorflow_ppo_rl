@@ -1,4 +1,4 @@
-from agent import PPO_MLP
+from agent import PPO_MLP, A2C_MLP
 import numpy as np
 import tensorflow as tf
 from tensorboardX import SummaryWriter
@@ -8,7 +8,8 @@ from multiprocessing import Process, Pipe
 writer = SummaryWriter()
 sess = tf.Session()
 state_size, output_size = 8, 4
-agent = PPO_MLP(sess, state_size, output_size)
+agent = A2C_MLP(sess, state_size, output_size)
+#agent = PPO_MLP(sess, state_size, output_size)
 sess.run(tf.global_variables_initializer())
 saver = tf.train.Saver()
 
@@ -91,3 +92,4 @@ while True:
     agent.train_model(total_state, total_action, np.hstack(total_target), np.hstack(total_adv))
 
     writer.add_scalar('data/reward_per_rollout', sum(total_reward)/(num_worker), global_update)
+    saver.save(sess, 'breakout/model')
