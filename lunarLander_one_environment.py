@@ -50,4 +50,4 @@ while True:
 
     print(episode, score)
     writer.add_scalar('data/reward_per_rollout', score, episode)
-    saver.save(sess, 'lunarlander/model')
+    #saver.save(sess, 'lunarlander/model')
